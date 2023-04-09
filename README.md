@@ -6,4 +6,4 @@ Try it:
 - In chrome go to 'chrome://extensions' and press 'Load unpacked'
 - Now you have a new extension that loads nostri.chat everywhere and takes the actual URL to set the topic
 
-For more info about nostr.chat visit https://nostri.chat/
+For more info about nostri.chat visit https://nostri.chat/

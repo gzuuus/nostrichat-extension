@@ -1,5 +1,5 @@
 {
-    "name": "Nostrieverywhere",
+    "name": "Nostri-everywhere",
     "version": "1.0",
     "description": "Loads nostri.chat everywhere",
     "permissions": ["activeTab"],

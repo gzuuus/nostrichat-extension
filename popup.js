@@ -11,9 +11,8 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       container.classList.add('${cleanedUrl}');
       var script = document.createElement('script');
       script.src = "https://nostri.chat/public/bundle.js";
-      script.setAttribute("data-website-owner-pubkey", "#");
       script.setAttribute("data-chat-type", "GLOBAL");
-      script.setAttribute("data-chat-tags","${url}");
+      script.setAttribute("data-chat-reference-tags","${url}");
       script.setAttribute("data-relays", "wss://relay.f7z.io,wss://nos.lol,wss://relay.nostr.info,wss://nostr-pub.wellorder.net,wss://relay.current.fyi,wss://relay.nostr.band");
       container.appendChild(script);
       var link = document.createElement("link");

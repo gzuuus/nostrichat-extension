@@ -7,10 +7,9 @@
 body{
     color: var(--text-color);
     width: 250px;
-    height: auto;
     background-color: var(--bg-color);
     text-align: center;
-    margin-bottom: 15px;
+    margin: 15px;
 }
 #inject{
     background-color: var(--button-color);

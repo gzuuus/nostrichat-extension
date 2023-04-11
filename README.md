@@ -14,7 +14,7 @@ When you click on the extension icon it automatically takes the url of the page 
 
 <details>
     <summary>Worker code</summary>
-    
+
     addEventListener("fetch", event => {
     event.respondWith(handleRequest(event.request))
     })
@@ -74,17 +74,17 @@ When you click on the extension icon it automatically takes the url of the page 
 #### What else can you do?
 As there is a worker giving service, you can use it without having the extension installed.
 The root is `chat.punkhub.me/` and you can use different hooks with it.
-- ref: put an 'r' tag inside the note. 
-- ex: `chat.punkhub.me/?ref=https://nostr.com/`
-- tag: puts a 't' tag inside the note.
-- ex: `chat.punkhub.me/?tag=bitcoin`
+- ref: sets an 'r' tag inside the notes. 
+- e.g: `chat.punkhub.me/?ref=https://nostr.com/`.
+- tag: sets an 't' tag inside the note.
+- e.g: `chat.punkhub.me/?tag=bitcoin` 
 - relays: set the list of relays you connect to, if left empty it defaults to the list suggested by nostri.chat.
-- ex: `chat.punkhub.me/?relays=wss://nos.lol,wss://relay.snort.social`
+- e.g: `chat.punkhub.me/?relays=wss://nos.lol,wss://relay.snort.social`.
 - dm: Set the chat to dm type and take a public key in HEX format as value.
-- ex: `chat.punkhub.me/?dm=40b9c85fffeafc1cadf8c30a4e5c88660ff6e4971a0dc723d5ab674b5e61b451`
+- e.g: `chat.punkhub.me/?dm=40b9c85fffeafc1cadf8c30a4e5c88660ff6e4971a0dc723d5ab674b5e61b451`
 
 Of course you can combine these hooks, e.g:
-- `chat.punkhub.me/?ref=https://nostr.com/&tag=bitcoin&relays=wss://nos.lol`
+- `chat.punkhub.me/?ref=https://nostr.com/&tag=bitcoin&relays=wss://nos.lol`.
 
 
 For more info about nostri.chat visit https://nostri.chat/

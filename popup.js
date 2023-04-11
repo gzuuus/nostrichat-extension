@@ -3,9 +3,9 @@
     var cleanedUrl = url.replace(/^(https?:\/\/)?(www\.)?/i, '');
     chrome.storage.sync.get("relayList", function(items) {
     var relayList = items.relayList;
-    var cleanedUrlNoQuery = cleanedUrl.split("?")[0];
+    var cleanedUrlNoQuery = cleanedUrl.split("&")[0];
     document.getElementById('url').innerHTML = cleanedUrlNoQuery;
-    let hook = `https://patient-smoke-c024.gz-us4g55922.workers.dev/?ref=${cleanedUrlNoQuery}`;
+    let hook = `https://chat.punkhub.me/?ref=${cleanedUrlNoQuery}`;
     if (relayList) {
     hook += `&relays=${relayList}`;
     }

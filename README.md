@@ -14,6 +14,7 @@ When you click on the extension icon it automatically takes the url of the page 
 
 <details>
     <summary>Worker code</summary>
+    
     addEventListener("fetch", event => {
     event.respondWith(handleRequest(event.request))
     })

@@ -15,60 +15,68 @@ When you click on the extension icon it automatically takes the url of the page 
 <details>
     <summary>Worker code</summary>
 
-    addEventListener("fetch", event => {
-    event.respondWith(handleRequest(event.request))
-    })
+        addEventListener("fetch", event => {
+        event.respondWith(handleRequest(event.request))
+        })
 
-    async function handleRequest(request) {
-    try {
-        if (request.method === "GET") {
-        const url = new URL(request.url);
-        const ref = url.searchParams.get("ref");
+        async function handleRequest(request) {
+        try {
+            if (request.method === "GET") {
+            const url = new URL(request.url);
+            
+            let chatReferenceTags = "";
+            const ref = url.searchParams.get("ref");
+            if (ref) {
+                chatReferenceTags = `data-chat-reference-tags="${ref.replace(/^(https?:\/\/)?(www\.)?/i, '').split('&')[0]}"`;
+            }
 
-        let chatReferenceTags = "";
-        if (ref) {
-            chatReferenceTags = `data-chat-reference-tags="${ref}"`;
+            const tag = url.searchParams.has("tag") ? url.searchParams.get("tag") : "";
+            const chatTags = tag ? `data-chat-tags="${tag}"` : "";
+
+            let relays = "wss://relay.f7z.io,wss://nos.lol,wss://relay.nostr.info,wss://nostr-pub.wellorder.net,wss://relay.current.fyi,wss://relay.nostr.band";
+            if (url.searchParams.has("relays")) {
+                relays = url.searchParams.get("relays");
+            }
+
+            const pub = url.searchParams.has("dm") ? url.searchParams.get("dm") : "";
+            const chatType = pub ? "DM" : "GLOBAL";
+            const dmPub = pub ? `data-website-owner-pubkey="${pub}"` : "";
+
+            let chatOptionHideAnon = "";
+            const hideAnon = url.searchParams.has("hide-anon");
+            if (hideAnon) {
+                chatOptionHideAnon = "<style>.flex > button:nth-child(3) {display: none;}	</style>";
+            }
+
+            const widget = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>${ref || ""} ${tag} ${pub}</title>
+                    <link rel="stylesheet" href="https://nostri.chat/public/bundle.css">
+                    ${chatOptionHideAnon}
+                </head>
+                <body>
+                    <div id="nostri"></div>
+                    <script src="https://nostri.chat/public/bundle.js" data-chat-type="${chatType}" ${chatReferenceTags} ${chatTags} ${dmPub} data-relays="${relays}"></script>
+                </body>
+                </html>
+            `; 
+            const headers = { "Content-Type": "text/html" };
+            return new Response(widget, { headers });
+            }
+        } catch (error) {
+            console.error("Error occurred: ", error);
+            const body = "Error occurred while processing your request.";
+            return new Response(body, {
+            status: 500,
+            statusText: "Error",
+            headers: { "Content-Type": "text/plain" },
+            });
         }
-
-        let chatTags = "";
-        if (url.searchParams.has("tag")) {
-            tag = url.searchParams.get("tag");
-            chatTags = `data-chat-tags="${tag}"`
         }
-
-        let relays = "wss://relay.f7z.io,wss://nos.lol,wss://relay.nostr.info,wss://nostr-pub.wellorder.net,wss://relay.current.fyi,wss://relay.nostr.band";
-        if (url.searchParams.has("relays")) {
-            relays = url.searchParams.get("relays");
-        }
-
-        chatType= "GLOBAL"
-        dmPub=""
-        if (url.searchParams.has("dm")){
-            chatType= "DM"
-            pub = url.searchParams.get('dm')
-            dmPub = `data-website-owner-pubkey="${pub}"`
-        }
-
-        const widget = `
-            <body>
-            <div id="nostri"></div>
-            <link rel="stylesheet" href="https://nostri.chat/public/bundle.css">
-            <script src="https://nostri.chat/public/bundle.js" data-chat-type="${chatType}" ${chatReferenceTags} ${chatTags} ${dmPub} data-relays="${relays}"></script>
-            </body>
-        `;
-        const headers = { "Content-Type": "text/html" };
-        return new Response(widget, { headers });
-        }
-    } catch (error) {
-        console.error("Error occurred: ", error);
-        const body = "Error occurred while processing your request.";
-        return new Response(body, {
-        status: 500,
-        statusText: "Error",
-        headers: { "Content-Type": "text/plain" },
-        });
-    }
-    }
 </details>
 
 #### What else can you do?
@@ -82,6 +90,8 @@ The root is `chat.punkhub.me/` and you can use different hooks with it.
 - e.g: `chat.punkhub.me/?relays=wss://nos.lol,wss://relay.snort.social`.
 - dm: Set the chat to dm type and take a public key in HEX format as value.
 - e.g: `chat.punkhub.me/?dm=40b9c85fffeafc1cadf8c30a4e5c88660ff6e4971a0dc723d5ab674b5e61b451`
+- hide-anon: hides the Ephemeral Keys button
+- e.g: `chat.punkhub.me/?hide-anon`
 
 Of course you can combine these hooks, e.g:
 - `chat.punkhub.me/?ref=https://nostr.com/&tag=bitcoin&relays=wss://nos.lol`.

@@ -16,83 +16,130 @@ When you click on the extension icon it automatically takes the url of the page 
     <summary>Worker code</summary>
 
     
-        addEventListener("fetch", event => {
-          event.respondWith(handleRequest(event.request))
-        })
+addEventListener("fetch", event => {
+  event.respondWith(handleRequest(event.request))
+})
 
-        async function handleRequest(request) {
-          try {
-            if (request.method === "GET") {
-              const url = new URL(request.url);
-              const currentUrl = url.toString();
+async function handleRequest(request) {
+  try {
+    if (request.method === "GET") {
+      const url = new URL(request.url);
+      const currentUrl = url.toString();
 
-              let chatReferenceTags = "";
-              const ref = url.searchParams.get("ref");
-              if (ref) {
-                chatReferenceTags = `data-chat-reference-tags="${ref.replace(/^(https?:\/\/)?(www\.)?/i, '').split('&')[0]}"`;
+      let chatReferenceTags = "";
+      const ref = url.searchParams.get("ref");
+      const cleanedRef = ref ? ref.replace(/^(https?:\/\/)?(www\.)?/i, '').split('&')[0] : "";
+      if (ref) {
+        chatReferenceTags = `data-chat-reference-tags="${ref}, ${cleanedRef}"`;
+      }
+
+      const tag = url.searchParams.has("tag") ? url.searchParams.get("tag") : "";
+      const chatTags = tag ? `data-chat-tags="${tag}"` : "";
+
+      let relays = "wss://relay.f7z.io,wss://nos.lol,wss://relay.snort.social,wss://nostr-pub.wellorder.net,wss://relay.nostr.band,wss://nostr.mutinywallet.com ";
+      if (url.searchParams.has("relays")) {
+        relays = url.searchParams.get("relays");
+      }
+
+      const pub = url.searchParams.has("dm") ? url.searchParams.get("dm") : "";
+      const chatType = pub ? "DM" : "GLOBAL";
+      const dmPub = pub ? `data-website-owner-pubkey="${pub}"` : "";
+
+      let chatOptionHideAnon = "";
+      const hideAnon = url.searchParams.has("hide-anon");
+      if (hideAnon) {
+        chatOptionHideAnon = "<style>.flex > button:nth-child(3) {display: none;}	</style>";
+      }
+
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(currentUrl)}&size=200x200`;
+
+      const widget = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>${ref || ""} ${tag} ${pub}</title>
+            <link rel="stylesheet" href="https://nostri.chat/public/bundle.css">
+            ${chatOptionHideAnon}
+            <style>
+              div {word-break: break-all;}
+              body {background:#1a1a1a;margin-top:10px;}
+              #share {padding: 10px;background-color: white;border-radius: 15px;text-align:center; color:black;}
+              .qr-code {display: block;justify-content: center;text-align: center;}
+              .qr-code img {width: 200px;height: 200px; margin:20px;}
+              details {border: 1px solid #aaa;border-radius: 4px;padding: 10px;color: white;justify-content: center;}
+              label, input, button {margin: 10px 0px;}
+              button {padding: 10px 15px;background: #541B81;color: white;border: solid 1px;border-radius: 10px;}
+              input {padding: 5px;border: solid 1px;color: white;background: #541B81;border-radius: 10px;}
+            </style>
+          </head>
+          <body onload="changeText()">
+            <div id="share">
+              <p>Share: <a href="${currentUrl}" target="_blank" rel="noreferrer">${currentUrl}</a></p>
+            </div>
+            <div class="qr-code">
+              <img src="${qrCodeUrl}" alt="QR code for ${currentUrl}">
+            <details>
+            <summary>Search</summary>
+              <div id="share">
+              <form onsubmit="openLink(); return false;">
+                <label for="linkInput"></label>
+                <input type="text" id="linkInput"placeholder="write someting">
+                <br>
+                <label for="prefixSelector"></label>
+                <select id="prefixSelector" onchange="changeText()">
+                  <option value="https://chat.punkhub.me/?ref=">ref</option>
+                  <option value="https://chat.punkhub.me/?tag=">tag</option>
+                  <option value="https://chat.punkhub.me/?dm=">dm</option>
+                </select>
+                <br>
+                <p id="text"></p>
+                <button type="submit">Go</button>
+              </form>
+              </div>
+            </details>
+            </div>
+            <script>
+              function openLink() {
+                var linkInput = document.getElementById("linkInput");
+                var link = linkInput.value;
+                var prefix = document.getElementById("prefixSelector").value;
+                var fullLink = prefix + link;
+                window.location.href=fullLink;
               }
-
-              const tag = url.searchParams.has("tag") ? url.searchParams.get("tag") : "";
-              const chatTags = tag ? `data-chat-tags="${tag}"` : "";
-
-              let relays = "wss://relay.f7z.io,wss://nos.lol,wss://relay.nostr.info,wss://nostr-pub.wellorder.net,wss://relay.current.fyi,wss://relay.nostr.band,wss://nostr.mutinywallet.com ";
-              if (url.searchParams.has("relays")) {
-                relays = url.searchParams.get("relays");
+              function changeText() {
+                var selectBox = document.getElementById("prefixSelector");
+                var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+                var text = "";
+                if (selectedValue === "https://chat.punkhub.me/?ref=") {
+                  text = "'ref' for referencing websites or uris. e.g: github.com/nostr-protocol/nostr";
+                } else if (selectedValue === "https://chat.punkhub.me/?tag=") {
+                  text = "'tag' for referencing topics. e.g: Bitcoin";
+                } else if (selectedValue === "https://chat.punkhub.me/?dm=") {
+                  text = "dm' to send a direct message to someone's pubkey (hex format)";
+                }
+                document.getElementById("text").innerHTML = text;
               }
+            </script>
+            <script src="https://nostri.chat/public/bundle.js" data-chat-type="${chatType}" ${chatReferenceTags} ${chatTags} ${dmPub} data-relays="${relays}"></script>
+          </body>
+        </html>
+      `;
+      const headers = { "Content-Type": "text/html" };
+      return new Response(widget, { headers });
+    }
+  } catch (error) {
+    console.error("Error occurred: ", error);
+    const body = "Error occurred while processing your request.";
+    return new Response(body, {
+      status: 500,
+      statusText: "Error",
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+}
 
-              const pub = url.searchParams.has("dm") ? url.searchParams.get("dm") : "";
-              const chatType = pub ? "DM" : "GLOBAL";
-              const dmPub = pub ? `data-website-owner-pubkey="${pub}"` : "";
-
-              let chatOptionHideAnon = "";
-              const hideAnon = url.searchParams.has("hide-anon");
-              if (hideAnon) {
-                chatOptionHideAnon = "<style>.flex > button:nth-child(3) {display: none;}	</style>";
-              }
-
-              const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(currentUrl)}&size=200x200`;
-
-              const widget = `
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <title>${ref || ""} ${tag} ${pub}</title>
-                    <link rel="stylesheet" href="https://nostri.chat/public/bundle.css">
-                    ${chatOptionHideAnon}
-                    <style>
-                      div {word-break: break-all;}
-                      body {background:#1a1a1a;margin-top:10px;}
-                      #share {padding: 10px;background-color: white;border-radius: 15px;text-align:center;}
-                      .qr-code {display: flex;justify-content: center;margin-top: 20px;}
-                      .qr-code img {width: 200px;height: 200px;}
-                    </style>
-                  </head>
-                  <body>
-                    <div id="share">
-                      <p>Share: <a href="${currentUrl}" target="_blank" rel="noreferrer">${currentUrl}</a></p>
-                    </div>
-                    <div class="qr-code">
-                      <img src="${qrCodeUrl}" alt="QR code for ${currentUrl}">
-                    </div>
-                    <script src="https://nostri.chat/public/bundle.js" data-chat-type="${chatType}" ${chatReferenceTags} ${chatTags} ${dmPub} data-relays="${relays}"></script>
-                  </body>
-                </html>
-              `;
-              const headers = { "Content-Type": "text/html" };
-              return new Response(widget, { headers });
-            }
-          } catch (error) {
-            console.error("Error occurred: ", error);
-            const body = "Error occurred while processing your request.";
-            return new Response(body, {
-              status: 500,
-              statusText: "Error",
-              headers: { "Content-Type": "text/plain" },
-            });
-          }
-        }
 
 </details>
 
